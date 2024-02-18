@@ -1,0 +1,59 @@
+<?php
+
+namespace App\Http\Controllers\Archives;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use App\Models\Bachiller;
+
+class BachillerController extends Controller
+{
+    public function store(Request $request)
+    {
+        try {
+            // Asegúrate de que el campo 'dni' esté llegando correctamente
+            $dni = $request->dni;
+
+            // Llama a la función subirArchivos para obtener las rutas
+            $rutasArchivos = $this->subirArchivos($request, $dni);
+
+            // Almacena los datos en la base de datos utilizando Eloquent
+            $bachiller = Bachiller::create([
+                'cod_matricula' => $request->cod_matricula,
+                'dni' => $dni,
+                'resolucion_bachiller' => $rutasArchivos['resolucion_bachiller'],
+                'diploma_bachiller' => $rutasArchivos['diploma_bachiller'],
+                'certificado_estudios' => $rutasArchivos['certificado_estudios'],
+                'constancia_ingreso' => $rutasArchivos['constancia_ingreso'],
+                'acta' => $rutasArchivos['acta'],
+                'copia_dni' => $rutasArchivos['copia_dni'],
+                // Otros campos según sea necesario
+            ]);
+
+            // Realiza otras acciones o redirección después de almacenar en la base de datos
+            return redirect()->route('archivos');
+        } catch (\Exception $e) {
+            // Manejar errores, mostrar mensajes al usuario, etc.
+            return back()->withInput()->withErrors(['error' => $e->getMessage()]);
+        }
+    }
+    
+    public function subirArchivos(Request $request, $dni)
+    {
+        $resolucionBachillerPath = $request->file('resolucionB')->store('archivos/' . $dni . '/resoluciones');
+        $diplomaBachillerPath = $request->file('diplomaB')->store('archivos/' . $dni . '/certificados');
+        $certificadoEstudiosPath = $request->file('certificadoE')->store('archivos/' . $dni . '/certificados');
+        $constanciaIngresoPath = $request->file('constanciaI')->store('archivos/' . $dni . '/certificados');
+        $actaPath = $request->file('actaB')->store('archivos/' . $dni . '/actas');
+        $copiaDNIPath = $request->file('copiaDNI')->store('archivos/' . $dni . '/certificados');
+
+        return [
+            'resolucion_bachiller' => $resolucionBachillerPath,
+            'diploma_bachiller' => $diplomaBachillerPath,
+            'certificado_estudios' => $certificadoEstudiosPath,
+            'constancia_ingreso' => $constanciaIngresoPath,
+            'acta' => $actaPath,
+            'copia_dni' => $copiaDNIPath,
+        ];
+    }
+}

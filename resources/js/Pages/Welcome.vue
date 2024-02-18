@@ -1,63 +1,77 @@
 <script setup>
-import { Head, Link } from '@inertiajs/vue3';
+import Checkbox from '@/Components/Checkbox.vue';
+import GuestLayout from '@/Layouts/GuestLayout.vue';
+import InputError from '@/Components/InputError.vue';
+import InputLabel from '@/Components/InputLabel.vue';
+import PrimaryButton from '@/Components/PrimaryButton.vue';
+import TextInput from '@/Components/TextInput.vue';
+import { Head, Link, useForm } from '@inertiajs/vue3';
 
 defineProps({
-    canLogin: {
+    canResetPassword: {
         type: Boolean,
     },
-    canRegister: {
-        type: Boolean,
-    },
-    laravelVersion: {
+    status: {
         type: String,
-        required: true,
-    },
-    phpVersion: {
-        type: String,
-        required: true,
     },
 });
+
+const form = useForm({
+    email: '',
+    password: '',
+    remember: false,
+});
+
+const submit = () => {
+    form.post(route('login'), {
+        onFinish: () => form.reset('password'),
+    });
+};
 </script>
 
 <template>
-    <Head title="Welcome" />
+    <GuestLayout>
 
-    <div
-        class="relative sm:flex sm:justify-center sm:items-center min-h-screen bg-dots-darker bg-center bg-gray-100 dark:bg-dots-lighter dark:bg-yellow-500 selection:bg-red-500 selection:text-white"
-    >
-        <div v-if="canLogin" class="sm:fixed sm:top-0 sm:right-0 p-6 text-end">
-            <Link
-                v-if="$page.props.auth.user"
-                :href="route('dashboard')"
-                class="font-semibold text-gray-600 hover:text-red-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                >Dashborar</Link
-            >
+        <Head title="Log in" />
 
-            <template v-else>
-                <Link
-                    :href="route('login')"
-                    class="font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                    >Iniciar Sesión</Link
-                >
-
-                <Link
-                    v-if="canRegister"
-                    :href="route('register')"
-                    class="ms-4 font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500"
-                    >Registrarse</Link
-                >
-            </template>
+        <div v-if="status" class="mb-4 font-medium text-sm text-green-600">
+            {{ status }}
         </div>
-    </div>
-</template>
 
-<style>
-.bg-dots-darker {
-    background-image: url("");
-}
-@media (prefers-color-scheme: dark) {
-    .dark\:bg-dots-lighter {
-        background-image: url("");
-    }
-}
-</style>
+        <form @submit.prevent="submit">
+            <div>
+                <InputLabel for="email" value="Email" />
+
+                <TextInput id="email" type="email" class="mt-1 block w-full" v-model="form.email" required autofocus
+                    autocomplete="username" />
+
+                <InputError class="mt-2" :message="form.errors.email" />
+            </div>
+
+            <div class="mt-4">
+                <InputLabel for="password" value="Password" />
+
+                <TextInput id="password" type="password" class="mt-1 block w-full" v-model="form.password" required
+                    autocomplete="current-password" />
+
+                <InputError class="mt-2" :message="form.errors.password" />
+            </div>
+
+            <div class="block mt-4">
+                <label class="flex items-center">
+                    <Checkbox name="remember" v-model:checked="form.remember" />
+                    <span class="ms-2 text-sm text-gray-600">Remember me</span>
+                </label>
+            </div>
+
+            <div class="flex items-center justify-end mt-4">
+                <a class="text-caption text-decoration-none text-blue" href="route('password.request')" rel="noopener noreferrer" target="_blank">
+                    Forgot login password?</a>
+
+                <PrimaryButton class="ms-4" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                    Log in
+                </PrimaryButton>
+            </div>
+        </form>
+    </GuestLayout>
+</template>
